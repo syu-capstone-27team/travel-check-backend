@@ -7,6 +7,15 @@ server:
 spring:
     datasource:
         driver-class-name: com.mysql.cj.jdbc.Driver
-        password: 1234
+        password: 12345
         url: jdbc:mysql://localhost:3306/babel?serverTimezone=UTC&characterEncoding=UTF-8
         username: root
+    mvc:
+        view:
+            prefix: /resources/templates/
+            suffix: .html
+
+kakao:
+    client_id: 82f2d73a40b55b4b5854f06ed5d1e436
+    redirect_uri: http://localhost:8080/login/oauth2/code/kakao
+    client_secret: tioEnkqyf3opfp51drI8FYN4nUbYOb1u
