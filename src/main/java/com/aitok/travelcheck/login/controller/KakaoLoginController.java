@@ -26,13 +26,12 @@ public class KakaoLoginController {
 
     @GetMapping("/login/oauth2/code/kakao")
     public ResponseEntity<MsgEntity> callback(HttpServletRequest request, HttpSession session) throws Exception {
-        String accessToken = request.getParameter("code"); // 토큰 받기
-        KakaoDTO kakaoInfo = kakaoService.getKakaoInfo(accessToken); // 토큰 전송
+        String code = request.getParameter("code"); // 토큰 받기
+        KakaoDTO kakaoInfo = kakaoService.getKakaoInfo(code); // 토큰 전송
 
         if (kakaoInfo != null) {
             session.setAttribute("loginMember", kakaoInfo);
             session.setMaxInactiveInterval(60 * 30);
-            session.setAttribute("kakaoToken", accessToken);
         }
 
         return ResponseEntity.ok()
@@ -42,22 +41,24 @@ public class KakaoLoginController {
     // logout
     @GetMapping("/logout")
     public String kakaoLogout(HttpSession session) {
-        String accessToken = (String) session.getAttribute("kakaoToken");
-
-        if(accessToken != null && !"".equals(accessToken)){
+        KakaoDTO member = (KakaoDTO) session.getAttribute("loginMember");
+        String accessToken = member.getAccessToken();
+        System.out.println(accessToken);
+        if (accessToken != null && !"".equals(accessToken)) {
             try {
-                System.out.println("accessToken = " + accessToken);
                 kakaoService.kakaoDisconnect(accessToken);
-            } catch (JsonProcessingException e) {
-                throw new RuntimeException(e);
+            } catch (Exception e) {
+                System.err.println("Failed to logout from Kakao: " + e.getMessage());
+                return "errorPage"; // 예외 상황을 처리하는 뷰 페이지로 리다이렉트
             }
-            session.removeAttribute("kakaoToken");
             session.removeAttribute("loginMember");
-        }else{
+        } else {
             System.out.println("accessToken is null");
         }
 
-        return "redirect:/";
+        System.out.println("=====================");
+        return "redirect:/login";
     }
+
 
 }
