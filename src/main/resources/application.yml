@@ -14,6 +14,13 @@ spring:
         view:
             prefix: /resources/templates/
             suffix: .html
+    jpa:
+        hibernate:
+            ddl-auto: update  # or 'create', 'validate', 'create-drop' as needed
+        properties:
+            hibernate:
+                show_sql: true
+                format_sql: true
 
 kakao:
     client_id: 82f2d73a40b55b4b5854f06ed5d1e436
