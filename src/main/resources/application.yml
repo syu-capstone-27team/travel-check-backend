@@ -7,8 +7,8 @@ server:
 spring:
     datasource:
         url: jdbc:mysql://61.109.236.108:3306/travelcheck?useSSL=false&serverTimezone=UTC
-        username: root
-        password:
+        username: minwoo
+        password: 780525
         driver-class-name: com.mysql.cj.jdbc.Driver
     mvc:
         view:
