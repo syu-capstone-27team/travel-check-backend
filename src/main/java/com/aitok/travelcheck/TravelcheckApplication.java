@@ -10,4 +10,6 @@ public class TravelcheckApplication {
 		SpringApplication.run(TravelcheckApplication.class, args);
 	}
 
+
+
 }

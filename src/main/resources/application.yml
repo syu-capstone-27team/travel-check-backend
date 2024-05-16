@@ -16,7 +16,7 @@ spring:
             suffix: .html
     jpa:
         hibernate:
-            ddl-auto: update  # or 'create', 'validate', 'create-drop' as needed
+            ddl-auto: none  # or 'create', 'validate', 'create-drop' as needed
         properties:
             hibernate:
                 show_sql: true

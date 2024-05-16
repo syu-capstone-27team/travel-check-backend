@@ -30,7 +30,7 @@ public class KakaoLoginController {
         KakaoDTO kakaoInfo = kakaoService.getKakaoInfo(code); // 토큰 전송
 
         if (kakaoInfo != null) {
-            session.setAttribute("loginMember", kakaoInfo);
+            session.setAttribute("kakaoDTO", kakaoInfo);
             session.setMaxInactiveInterval(60 * 30);
         }
 
@@ -41,7 +41,7 @@ public class KakaoLoginController {
     // logout
     @GetMapping("/logout")
     public String kakaoLogout(HttpSession session) {
-        KakaoDTO member = (KakaoDTO) session.getAttribute("loginMember");
+        KakaoDTO member = (KakaoDTO) session.getAttribute("kakaoDTO");
         String accessToken = member.getAccessToken();
         System.out.println(accessToken);
         if (accessToken != null && !"".equals(accessToken)) {
