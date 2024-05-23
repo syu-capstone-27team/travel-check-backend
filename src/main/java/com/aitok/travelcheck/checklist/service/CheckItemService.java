@@ -22,6 +22,7 @@ public class CheckItemService {
     private final CheckListRepository checkListRepository;
 
     public List<CheckItemResponseDTO> getCheckItemsByCheckListId(Long checkListId, Long userId) {
+
         CheckList checkList = checkListRepository.findById(checkListId)
                 .orElseThrow(() -> new RuntimeException("CheckList not found"));
 

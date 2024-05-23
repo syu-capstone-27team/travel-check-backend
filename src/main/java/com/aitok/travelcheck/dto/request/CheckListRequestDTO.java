@@ -15,7 +15,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CheckListRequestDTO {
-    private Long checkListId;
+//    private Long checkListId;
     private String checkListName;
     private Long countryId;
     private Long userId;

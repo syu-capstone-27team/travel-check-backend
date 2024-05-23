@@ -13,6 +13,7 @@ import com.aitok.travelcheck.entity.Category;
 import com.aitok.travelcheck.entity.CheckItem;
 import com.aitok.travelcheck.entity.CheckList;
 import com.aitok.travelcheck.entity.Country;
+import com.aitok.travelcheck.exception.UnauthorizedException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -49,13 +50,14 @@ public class CheckListService {
 
     @Transactional // 갱신
     public CheckListResponseDTO saveCheckList(CheckListRequestDTO requestDTO, long userId) {
-        Optional<CheckList> optionalCheckList = checkListRepository.findById(requestDTO.getCheckListId());
+//        System.out.println("requestDTO = " + requestDTO.getCheckListId());
+//        Optional<CheckList> optionalCheckList = checkListRepository.findById(requestDTO.getCheckListId());
 
         Country country = countryRepository.findById(requestDTO.getCountryId())
-                .orElseThrow(() -> new RuntimeException("Country not found"));
+                .orElseThrow(() -> new RuntimeException("나라가 찾아지지 않음"));
 
         CheckList checkList = checkListConverter.convertToEntity(requestDTO, country); // dto -> entity 변환
-        checkListRepository.save(checkList); // insert쿼리 2회수행 (checkList)
+        checkListRepository.save(checkList); // insert쿼리 수행 (checkList)
 
         // 여러 체크항목(N)이 있을 경우, 그 때마다 select쿼리를 통해 카테고리를 가져오는 것은 비효율적이니 미리 가져오자
         List<Long> categoryIds = requestDTO.getCheckItems().stream()
@@ -76,5 +78,45 @@ public class CheckListService {
         return checkListConverter.convertToDTO(checkList, checkItems);
     }
 
+    @Transactional
+    public boolean deleteCheckLists(Long checkListId, Long userId){
+        // 자기꺼만 수정하게 추가해야함
+        // 체크리스트와 관련된 체크아이템 먼저 삭제
+        Optional<CheckList> optionalCheckList = checkListRepository.findById(checkListId);
 
+        if (optionalCheckList.isPresent()) {
+            CheckList checkList = optionalCheckList.get();
+            if (checkList.getUserId().equals(userId)) {
+                List<CheckItem> checkItems = checkItemRepository.findByCheckList_CheckListId(checkListId);
+                checkItemRepository.deleteAll(checkItems);
+
+                // checkList 삭제
+                checkListRepository.deleteById(checkListId);
+                return true;
+            }
+        }
+
+        return false;
+    }
+    @Transactional
+    public boolean deleteCheckListItemsBatch(Long checkListId, List<Long> itemIds, Long userId) {
+        // 체크리스트를 조회하고 사용자 검증
+        CheckList checkList = checkListRepository.findById(checkListId)
+                .filter(cl -> cl.getUserId().equals(userId))
+                .orElseThrow(() -> new UnauthorizedException("잘못된 회원 혹은 체크리스트가 찾아지지 않음"));
+
+        // 삭제할 체크리스트 항목들을 조회하고 체크리스트 ID 검증
+        List<CheckItem> checkItems = checkItemRepository.findAllById(itemIds);
+        // 전자 : 없는 번호를 입력하면 checkItems.size() = 0 / -> 없는 번호
+        // 후자 :
+        if (checkItems.size() != itemIds.size() || checkItems.stream().anyMatch(item -> !item.getCheckList().getCheckListId().equals(checkListId))) {
+            throw new IllegalArgumentException("하나 이상의 항목이 체크리스트에 속하지 않거나 존재하지 않습니다");
+        }
+
+        // 체크리스트 항목 일괄 삭제
+        checkItemRepository.deleteAll(checkItems);
+        return true;
+    }
 }
+
+

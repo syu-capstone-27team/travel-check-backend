@@ -9,14 +9,17 @@ import com.aitok.travelcheck.exception.UnauthorizedException;
 import com.aitok.travelcheck.login.dto.KakaoDTO;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/checklists")
 public class CheckListController {
 
     private final CheckListService checkListService;
@@ -26,7 +29,7 @@ public class CheckListController {
      * @param session : 회원 정보 저장.
      * @return : "회원"의 모든 체크리스트 조회
      */
-    @GetMapping("/checklists")
+    @GetMapping
     public ResponseEntity<MsgEntity> getAllCheckLists(HttpSession session) {
 
         KakaoDTO kakaoDTO = (KakaoDTO) session.getAttribute("kakaoDTO"); // 세션에서 회원 정보를 꺼낸다
@@ -49,7 +52,7 @@ public class CheckListController {
      * @param session 회원 정보
      * @return 저장한 체크리스트 + 각종 ID
      */
-    @PostMapping("/checklists") //
+    @PostMapping
     public ResponseEntity<MsgEntity> saveCheckList(@RequestBody CheckListRequestDTO requestDTO, HttpSession session) {
         KakaoDTO kakaoDTO = (KakaoDTO) session.getAttribute("kakaoDTO");
 
@@ -61,6 +64,59 @@ public class CheckListController {
                     .body(new MsgEntity("Success", responseDTO));
         } else {
             throw new UnauthorizedException("No access token found in session.");
+        }
+    }
+
+    /**
+     * 체크리스트 + 체크리스트 항목 제거 메소드
+     * @param checkListId
+     * @param session
+     * @return 200
+     */
+    @DeleteMapping
+    public ResponseEntity<MsgEntity> deleteCheckLists(@RequestParam("id") Long checkListId, HttpSession session) {
+        KakaoDTO kakaoDTO = (KakaoDTO) session.getAttribute("kakaoDTO");
+
+        // 세션 검사
+        if (kakaoDTO == null || kakaoDTO.getAccessToken() == null) {
+            throw new UnauthorizedException("No access token found in session.");
+        }
+
+        Long userId = kakaoDTO.getId();
+        boolean isDeleted = checkListService.deleteCheckLists(checkListId, userId);
+
+        if (isDeleted) {
+            return new ResponseEntity<>(new MsgEntity("CheckList successfully deleted", null), HttpStatus.OK); // 200 성공
+        } else {
+            return new ResponseEntity<>(new MsgEntity("Forbidden: Unable to delete CheckList", null), HttpStatus.FORBIDDEN); // 403 권한 거부
+        }
+    }
+
+    /**
+     * 체크리스트 항목 제거 메소드
+     * @param checkListId
+     * @param itemIds
+     * @param session
+     * @return
+     */
+    @DeleteMapping("/{checklistId}/items")
+    public ResponseEntity<MsgEntity> deleteCheckListItem(@PathVariable("checklistId") Long checkListId,
+                                                         @RequestBody List<Long> itemIds,
+                                                         HttpSession session) {
+        KakaoDTO kakaoDTO = (KakaoDTO) session.getAttribute("kakaoDTO");
+
+        // 세션 검사
+        if (kakaoDTO == null || kakaoDTO.getAccessToken() == null) {
+            throw new UnauthorizedException("No access token found in session.");
+        }
+
+        Long userId = kakaoDTO.getId();
+        boolean isDeleted = checkListService.deleteCheckListItemsBatch(checkListId, itemIds, userId);
+
+        if (isDeleted) {
+            return new ResponseEntity<>(new MsgEntity("CheckListItem successfully deleted", null), HttpStatus.OK); // 200 성공
+        } else {
+            return new ResponseEntity<>(new MsgEntity("Forbidden: Unable to delete CheckListItem", null), HttpStatus.FORBIDDEN); // 403 권한 거부
         }
     }
 
