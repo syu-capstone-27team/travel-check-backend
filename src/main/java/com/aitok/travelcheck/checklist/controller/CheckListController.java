@@ -2,8 +2,10 @@ package com.aitok.travelcheck.checklist.controller;
 
 import com.aitok.travelcheck.checklist.service.CheckListService;
 import com.aitok.travelcheck.common.MsgEntity;
+import com.aitok.travelcheck.dto.request.CheckItemRequestDTO;
 import com.aitok.travelcheck.dto.request.CheckListRequestDTO;
 import com.aitok.travelcheck.dto.response.CheckListResponseDTO;
+import com.aitok.travelcheck.entity.CheckItem;
 import com.aitok.travelcheck.entity.CheckList;
 import com.aitok.travelcheck.exception.UnauthorizedException;
 import com.aitok.travelcheck.login.dto.KakaoDTO;
@@ -47,7 +49,7 @@ public class CheckListController {
 
 
     /**
-     * insert or Update 기능
+     * insert
      * @param requestDTO 체크리스트 입력 파라미터(체크리스트 + 체크아이템)
      * @param session 회원 정보
      * @return 저장한 체크리스트 + 각종 ID
@@ -66,6 +68,8 @@ public class CheckListController {
             throw new UnauthorizedException("No access token found in session.");
         }
     }
+
+
 
     /**
      * 체크리스트 + 체크리스트 항목 제거 메소드
@@ -117,6 +121,60 @@ public class CheckListController {
             return new ResponseEntity<>(new MsgEntity("CheckListItem successfully deleted", null), HttpStatus.OK); // 200 성공
         } else {
             return new ResponseEntity<>(new MsgEntity("Forbidden: Unable to delete CheckListItem", null), HttpStatus.FORBIDDEN); // 403 권한 거부
+        }
+    }
+
+    /**
+     * 체크리스트 수정 메소드
+     * @param checkListId
+     * @param requestDTO
+     * @param session
+     * @return 수정된 체크리스트
+     */
+    @PutMapping("/{checkListId}")
+    public ResponseEntity<MsgEntity> updateCheckList(@PathVariable("checkListId") Long checkListId,
+                                                     @RequestBody CheckListRequestDTO requestDTO,
+                                                     HttpSession session) {
+        KakaoDTO kakaoDTO = (KakaoDTO) session.getAttribute("kakaoDTO");
+
+        // 세션 검사
+        if (kakaoDTO == null || kakaoDTO.getAccessToken() == null) {
+            throw new UnauthorizedException("No access token found in session.");
+        }
+
+        Long userId = kakaoDTO.getId();
+        CheckListResponseDTO responseDTO = checkListService.updateCheckList(checkListId, requestDTO, userId);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new MsgEntity("Success", responseDTO));
+    }
+
+    /**
+     * 체크리스트 항목 수정 메소드
+     * @param checkListId
+     * @param itemId
+     * @param requestDTO
+     * @param session
+     * @return 수정된 체크리스트 항목
+     */
+    @PutMapping("/{checkListId}/items/{itemId}")
+    public ResponseEntity<MsgEntity> updateCheckListItem(@PathVariable("checkListId") Long checkListId,
+                                                         @PathVariable("itemId") Long itemId,
+                                                         @RequestBody CheckItemRequestDTO requestDTO,
+                                                         HttpSession session) {
+        KakaoDTO kakaoDTO = (KakaoDTO) session.getAttribute("kakaoDTO");
+
+        // 세션 검사
+        if (kakaoDTO == null || kakaoDTO.getAccessToken() == null) {
+            throw new UnauthorizedException("No access token found in session.");
+        }
+
+        Long userId = kakaoDTO.getId();
+        boolean isUpdated = checkListService.updateCheckListItem(checkListId, itemId, requestDTO, userId);
+
+        if (isUpdated) {
+            return new ResponseEntity<>(new MsgEntity("항목 업데이트 성공", null), HttpStatus.OK); // 200 성공
+        } else {
+            return new ResponseEntity<>(new MsgEntity("Forbidden: Unable to update CheckListItem", null), HttpStatus.FORBIDDEN); // 403 권한 거부
         }
     }
 

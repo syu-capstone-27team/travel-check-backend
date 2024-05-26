@@ -33,4 +33,10 @@ public class CheckItem {
         this.checkList = checkList;
         this.category = category;
     }
+
+    // update
+    public void changeCheckItem(String content, boolean checked) {
+        this.content = content;
+        this.checked = checked;
+    }
 }

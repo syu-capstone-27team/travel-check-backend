@@ -33,7 +33,7 @@ public class CheckList {
         this.country = country;
     }
 
-    public void updateCheckListName(String checkListName) {
+    public void changeCheckList(String checkListName) {
         this.checkListName = checkListName;
     }
 }

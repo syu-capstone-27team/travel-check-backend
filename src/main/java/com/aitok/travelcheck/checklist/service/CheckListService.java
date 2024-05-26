@@ -13,6 +13,7 @@ import com.aitok.travelcheck.entity.Category;
 import com.aitok.travelcheck.entity.CheckItem;
 import com.aitok.travelcheck.entity.CheckList;
 import com.aitok.travelcheck.entity.Country;
+import com.aitok.travelcheck.exception.ResourceNotFoundException;
 import com.aitok.travelcheck.exception.UnauthorizedException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -98,6 +99,7 @@ public class CheckListService {
 
         return false;
     }
+
     @Transactional
     public boolean deleteCheckListItemsBatch(Long checkListId, List<Long> itemIds, Long userId) {
         // 체크리스트를 조회하고 사용자 검증
@@ -115,6 +117,34 @@ public class CheckListService {
 
         // 체크리스트 항목 일괄 삭제
         checkItemRepository.deleteAll(checkItems);
+        return true;
+    }
+
+    @Transactional
+    public CheckListResponseDTO updateCheckList(Long checkListId, CheckListRequestDTO requestDTO, Long userId) {
+        CheckList checkList = checkListRepository.findById(checkListId)
+                .filter(cl -> cl.getUserId().equals(userId))
+                .orElseThrow(() -> new UnauthorizedException("잘못된 회원 혹은 체크리스트가 찾아지지 않음"));
+
+        // 체크리스트 필드 업데이트
+        checkList.changeCheckList(requestDTO.getCheckListName());
+
+        return checkListConverter.convertToDTO(checkList);
+    }
+
+    @Transactional
+    public boolean updateCheckListItem(Long checkListId, Long itemId, CheckItemRequestDTO requestDTO, Long userId) {
+        CheckList checkList = checkListRepository.findById(checkListId)
+                .filter(cl -> cl.getUserId().equals(userId))
+                .orElseThrow(() -> new UnauthorizedException("잘못된 회원 혹은 체크리스트가 찾아지지 않음"));
+
+        CheckItem checkItem = checkItemRepository.findById(itemId)
+                .filter(item -> item.getCheckList().getCheckListId().equals(checkListId))
+                .orElseThrow(() -> new ResourceNotFoundException("CheckItem not found with id " + itemId));
+
+        // 체크리스트 항목 필드 업데이트 (dirty checking)
+        checkItem.changeCheckItem(requestDTO.getContent(), requestDTO.isChecked());
+
         return true;
     }
 }
