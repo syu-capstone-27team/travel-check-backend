@@ -24,7 +24,7 @@ public class KakaoLoginController {
         return "login";
     }
 
-    @GetMapping("/login/oauth2/code/kakao")
+    @GetMapping()
     public ResponseEntity<MsgEntity> callback(HttpServletRequest request, HttpSession session) throws Exception {
         String code = request.getParameter("code"); // 토큰 받기
         KakaoDTO kakaoInfo = kakaoService.getKakaoInfo(code); // 토큰 전송
