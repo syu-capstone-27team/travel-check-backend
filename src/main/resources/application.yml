@@ -25,6 +25,7 @@ spring:
 kakao:
     client_id: 82f2d73a40b55b4b5854f06ed5d1e436
     redirect_uri: http://61.109.236.108:8080
+    #redirect_uri: http://localhost:8080
     client_secret: tioEnkqyf3opfp51drI8FYN4nUbYOb1u
 
 springdoc:

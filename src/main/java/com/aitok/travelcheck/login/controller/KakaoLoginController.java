@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 @RequiredArgsConstructor
@@ -24,9 +25,8 @@ public class KakaoLoginController {
         return "login";
     }
 
-    @GetMapping()
-    public ResponseEntity<MsgEntity> callback(HttpServletRequest request, HttpSession session) throws Exception {
-        String code = request.getParameter("code"); // 토큰 받기
+    @GetMapping("/")
+    public ResponseEntity<MsgEntity> callback(@RequestParam("code") String code, HttpSession session) throws Exception {
         KakaoDTO kakaoInfo = kakaoService.getKakaoInfo(code); // 토큰 전송
 
         if (kakaoInfo != null) {
